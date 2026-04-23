@@ -1,6 +1,6 @@
-name: Terraform Destroy
+name: Terraform Apply
 run-name: >
-  Destroy Platform by ${{ github.actor }} on ${{ github.ref_name }}
+  Terraform Apply by ${{ github.actor }} on ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
@@ -10,9 +10,8 @@ on:
         type: environment
         required: true
 
-
 concurrency:
-  group: terraform-destroy-${{ github.ref }}
+  group: terraform-deploy-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -20,11 +19,13 @@ permissions:
   contents: read       # needed for checkout / Terraform
 
 jobs:
-  terraform-destroy-platform:
-    name: Destroy Platform (AWS + Snowflake)
-    uses: subhamay-bhattacharyya-gha/terraform-destroy-wf/.github/workflows/terraform-destroy.yaml@feature/GHA-0032-add-platform-based-multi
+  terraform-deploy-platform:
+    name: Deploy
+    uses: subhamay-bhattacharyya-gha/tf-deploy-multi-reusable-wf/.github/workflows/terraform-deploy.yaml@bug/GHA-0027-bug-heredoc-write-of-snow
     with:
       cloud-provider: platform
+      tflint-ver: ${{ vars.TF_LINT_VER }}
       backend-type: remote
+      tf-vars-file: environments/${{ github.event.inputs.environment }}/terraform.tfvars
     secrets:
       tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO_SNOWFLAKE_ORG }}

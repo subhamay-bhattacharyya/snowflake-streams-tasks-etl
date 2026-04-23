@@ -2,24 +2,24 @@ name: Terraform CI
 run-name: Build run by ${{ github.actor }} on ${{ github.ref_name }}
 
 on:
-  push:
-    branches:
-      - 'main'
-      - 'feature/**'
-      - 'bug/**'
-    paths:
-      - infra/snowflake/tf/**
-      - input-jsons/**
+  # push:
+  #   branches:
+  #     - 'main'
+  #     - 'feature/**'
+  #     - 'bug/**'
+  #   paths:
+  #     - infra/platform/tf/**
+  #     - .github/workflows/ci.yaml
   pull_request:
     branches: [main]
     paths:
-      - infra/snowflake/tf/**
-      - input-jsons/**
+      - infra/platform/tf/**
   workflow_dispatch:
 
 permissions:
   contents: write
   id-token: write
+  security-events: write
 
 jobs:
   # ============================================================================
@@ -28,21 +28,18 @@ jobs:
 
   ci:
     name: CI
-    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@main
+    uses: subhamay-bhattacharyya-gha/tf-ci-reusable-wf/.github/workflows/ci.yaml@bug/GHA-0045-backend-type-remote-reus
     with:
-      cloud-provider: snowflake
+      cloud-provider: platform
       tflint-ver: ${{ vars.TF_LINT_VER }}
       backend-type: remote
-      tf-vars-file: terraform.tfvars
-      aws-region: ${{ vars.AWS_REGION }}
-      snowflake-user: ${{ vars.SNOWFLAKE_USER }}
-      snowflake-organization-name: ${{ vars.SNOWFLAKE_ORGANIZATION_NAME }}
-      snowflake-account-name: ${{ vars.SNOWFLAKE_ACCOUNT_NAME }}
-      snowflake-role: ${{ vars.SNOWFLAKE_ROLE }}
+      tf-vars-file: environments/devl/terraform.tfvars
+      # snowflake-user: ${{ vars.SNOWFLAKE_USER }}
+      # snowflake-role: ${{ vars.SNOWFLAKE_ROLE }}
     secrets:
-      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO }}
-      snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
-      aws-role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+      tfc-token: ${{ secrets.TF_TOKEN_APP_TERRAFORM_IO_SNOWFLAKE_ORG }}
+      # snowflake-private-key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+
 
   # ============================================================================
   # Generate Change Log
@@ -74,6 +71,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CHANGELOG.md
           git diff --staged --quiet || git commit -m "docs: update CHANGELOG.md [skip ci]"
+          git pull --rebase
           git push
 
   # ============================================================================
